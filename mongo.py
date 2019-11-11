@@ -1,25 +1,21 @@
 import pymongo
+from bson.objectid import ObjectId
 
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-mydb = myclient["mydatabase"]
 db = myclient.iotb
-
+users = db.users
 
 def validate(data):
-    users = db.users.find()
-    for user in users:
-        if user[_id] == data["clientId"]:
-            print("Authorised")
-            break
-    print("Unauthorised")
+    client = users.find_one({"_id":ObjectId(data["clientId"])})
+    if(client):
+        print("Authorised")
+    else:
+        print("Unauthorised")
 
 
 import paho.mqtt.client as mqtt
 import json
 
-
-def on_connect(mqttc, obj, flags, rc):
-    print("rc: " + str(rc))
 
 
 def on_message(mqttc, obj, msg):
@@ -34,7 +30,6 @@ def on_publish(mqttc, obj, mid):
 
 mqttc = mqtt.Client()
 mqttc.on_message = on_message
-mqttc.on_connect = on_connect
 mqttc.on_publish = on_publish
 mqttc.connect("127.0.0.1", 1883, 60)
 mqttc.subscribe("/iotb/request", 0)
